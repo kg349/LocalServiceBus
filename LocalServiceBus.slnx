@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/LocalServiceBus.Amqp/LocalServiceBus.Amqp.csproj" />
+    <Project Path="src/LocalServiceBus.Core/LocalServiceBus.Core.csproj" />
+    <Project Path="src/LocalServiceBus.Host/LocalServiceBus.Host.csproj" />
+    <Project Path="src/LocalServiceBus.Management/LocalServiceBus.Management.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LocalServiceBus.Core.Tests/LocalServiceBus.Core.Tests.csproj" />
+    <Project Path="tests/LocalServiceBus.Integration.Tests/LocalServiceBus.Integration.Tests.csproj" />
+  </Folder>
+</Solution>

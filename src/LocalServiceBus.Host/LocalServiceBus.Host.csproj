@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\LocalServiceBus.Core\LocalServiceBus.Core.csproj" />
+    <ProjectReference Include="..\LocalServiceBus.Amqp\LocalServiceBus.Amqp.csproj" />
+    <ProjectReference Include="..\LocalServiceBus.Management\LocalServiceBus.Management.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.CommandLine" Version="3.0.0-preview.3.26207.106" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>localbus</ToolCommandName>
+    <PackageId>LocalServiceBus</PackageId>
+    <Version>1.0.0</Version>
+    <Description>Local Azure Service Bus emulator for development and testing</Description>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+</Project>

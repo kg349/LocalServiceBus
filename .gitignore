@@ -1,0 +1,33 @@
+# Build output
+bin/
+obj/
+out/
+
+# NuGet packages
+*.nupkg
+nupkg/
+
+# .NET tool manifest
+.config/
+
+# User-specific files
+*.user
+*.suo
+.vs/
+*.DotSettings.user
+
+# Rider / JetBrains
+.idea/
+
+# SQLite databases
+*.db
+*.db-shm
+*.db-wal
+
+# Environment / secrets
+.env
+local.settings.json
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,15 @@
+{
+  "queues": [
+    { "name": "orders-queue", "maxDeliveryCount": 5 },
+    { "name": "payments-queue", "maxDeliveryCount": 3 }
+  ],
+  "topics": [
+    {
+      "name": "order-events",
+      "subscriptions": [
+        { "name": "notification-handler" },
+        { "name": "audit-handler" }
+      ]
+    }
+  ]
+}
