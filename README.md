@@ -2,6 +2,8 @@
 
 A standalone .NET 8 console application that emulates Azure Service Bus locally via the **AMQP 1.0 protocol**. The real `Azure.Messaging.ServiceBus` SDK connects to it transparently — all Azure Functions using `[ServiceBusTrigger]` work with **zero code changes**.
 
+> For a detailed explanation of how the emulator was designed, the alternatives that were considered, and the protocol-level challenges that were solved during implementation, see [`docs/DESIGN.md`](docs/DESIGN.md).
+
 ---
 
 ## Table of Contents
