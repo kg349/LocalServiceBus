@@ -3,6 +3,7 @@ using Amqp.Framing;
 using LocalServiceBus.Core.Models;
 using Symbol = global::Amqp.Types.Symbol;
 using ByteBuffer = global::Amqp.ByteBuffer;
+using DeliveryAnnotations = global::Amqp.Framing.DeliveryAnnotations;
 
 namespace LocalServiceBus.Amqp.Processors;
 
@@ -42,8 +43,15 @@ public static class AmqpConverter
 
     public static Message ToAmqpMessage(BrokerMessage brokerMessage)
     {
-        var message = new Message(brokerMessage.Body.ToArray())
+        var lockTokenString = brokerMessage.LockToken.ToString();
+
+        // Use BodySection = Data so the body is encoded as an AMQP data section
+        // (binary bytes). If we pass byte[] to the Message constructor directly,
+        // AMQPNetLite encodes it as AmqpValue(byte[]) which the Functions binding
+        // cannot convert to a string parameter.
+        var message = new Message
         {
+            BodySection = new Data { Binary = brokerMessage.Body.ToArray() },
             Properties = new Properties
             {
                 MessageId = brokerMessage.MessageId,
@@ -63,7 +71,14 @@ public static class AmqpConverter
             MessageAnnotations = new MessageAnnotations()
         };
 
-        message.MessageAnnotations[LockTokenSymbol] = brokerMessage.LockToken;
+        // Send the lock token as a string in both sections so it survives
+        // encoding across both AMQPNetLite and Microsoft.Azure.Amqp without
+        // UUID byte-ordering issues. The Azure SDK parses Guid.Parse(string)
+        // as a fallback when the value is not already a Guid.
+        message.DeliveryAnnotations = new DeliveryAnnotations();
+        message.DeliveryAnnotations[LockTokenSymbol] = lockTokenString;
+
+        message.MessageAnnotations[LockTokenSymbol] = lockTokenString;
         message.MessageAnnotations[SequenceNumberSymbol] = brokerMessage.SequenceNumber;
         message.MessageAnnotations[EnqueuedTimeSymbol] = brokerMessage.EnqueuedTime.UtcDateTime;
 
@@ -79,11 +94,20 @@ public static class AmqpConverter
 
     public static Guid ExtractLockToken(Message message)
     {
+        // Try MessageAnnotations first — we store the token as a string.
         if (message.MessageAnnotations?.Map is not null
-            && message.MessageAnnotations.Map.TryGetValue(LockTokenSymbol, out var tokenObj)
-            && tokenObj is Guid token)
+            && message.MessageAnnotations.Map.TryGetValue(LockTokenSymbol, out var tokenObj))
         {
-            return token;
+            if (tokenObj is Guid g) return g;
+            if (tokenObj is string s && Guid.TryParse(s, out var parsed)) return parsed;
+        }
+
+        // Fallback to DeliveryAnnotations.
+        if (message.DeliveryAnnotations?.Map is not null
+            && message.DeliveryAnnotations.Map.TryGetValue(LockTokenSymbol, out var daTokenObj))
+        {
+            if (daTokenObj is Guid dag) return dag;
+            if (daTokenObj is string das && Guid.TryParse(das, out var daParsed)) return daParsed;
         }
 
         return Guid.Empty;

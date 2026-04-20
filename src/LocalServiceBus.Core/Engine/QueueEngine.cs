@@ -91,6 +91,11 @@ public sealed class QueueEngine : IDisposable
         await _channel.Writer.WriteAsync(message);
     }
 
+    public DateTimeOffset RenewLock(Guid lockToken)
+    {
+        return _lockManager.RenewLock(lockToken, Entity.LockDuration);
+    }
+
     public async Task<List<BrokerMessage>> PeekAsync(int maxMessages = 10)
     {
         var messages = new List<BrokerMessage>();

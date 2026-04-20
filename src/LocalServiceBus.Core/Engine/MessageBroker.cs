@@ -85,6 +85,26 @@ public sealed class MessageBroker : IDisposable
         await queue.AbandonAsync(lockToken);
     }
 
+    public DateTimeOffset RenewLock(Guid lockToken)
+    {
+        foreach (var queue in _queues.Values)
+        {
+            try { return queue.RenewLock(lockToken); } catch { }
+        }
+
+        foreach (var topic in _topics.Values)
+        {
+            foreach (var subName in topic.GetSubscriptionNames())
+            {
+                var sub = topic.GetSubscription(subName);
+                if (sub is null) continue;
+                try { return sub.RenewLock(lockToken); } catch { }
+            }
+        }
+
+        throw new InvalidOperationException($"Lock token {lockToken} not found in any entity.");
+    }
+
     public IReadOnlyList<string> GetQueueNames() => _queues.Keys.ToList();
     public IReadOnlyList<string> GetTopicNames() => _topics.Keys.ToList();
 

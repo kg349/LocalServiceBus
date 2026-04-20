@@ -43,6 +43,16 @@ public sealed class LockManager : IDisposable
         return _locks.TryGetValue(lockToken, out var locked) ? locked.Message : null;
     }
 
+    public DateTimeOffset RenewLock(Guid lockToken, TimeSpan duration)
+    {
+        if (!_locks.TryGetValue(lockToken, out var locked))
+            throw new InvalidOperationException($"Lock token {lockToken} not found or expired.");
+
+        var newExpiry = DateTimeOffset.UtcNow.Add(duration);
+        _locks[lockToken] = locked with { ExpiresAt = newExpiry };
+        return newExpiry;
+    }
+
     public int ActiveLockCount => _locks.Count;
 
     private void EvictExpiredLocks(object? state)

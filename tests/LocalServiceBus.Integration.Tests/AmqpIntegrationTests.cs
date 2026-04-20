@@ -31,11 +31,24 @@ public class AmqpIntegrationTests : IAsyncLifetime
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Creates a client connection to the emulator using explicit ANONYMOUS SASL.
+    /// The emulator advertises [MSSBCBS, ANONYMOUS] — without SaslProfile.Anonymous
+    /// the client would skip SASL and send plain AMQP (protocol id 0), which the
+    /// SASL-enabled server rejects.
+    /// </summary>
+    private static Task<global::Amqp.Connection> CreateConnectionAsync()
+    {
+        var address = new global::Amqp.Address("amqp://localhost:" + TestPort);
+        var factory = new global::Amqp.ConnectionFactory();
+        factory.SASL.Profile = global::Amqp.Sasl.SaslProfile.Anonymous;
+        return factory.CreateAsync(address);
+    }
+
     [Fact]
     public async Task SendAndReceive_Queue_ViaAmqp()
     {
-        var address = new global::Amqp.Address("amqp://guest:guest@localhost:" + TestPort);
-        var connection = await global::Amqp.Connection.Factory.CreateAsync(address);
+        var connection = await CreateConnectionAsync();
         var session = new global::Amqp.Session(connection);
 
         var sender = new global::Amqp.SenderLink(session, "test-sender", "integration-queue");
@@ -66,8 +79,7 @@ public class AmqpIntegrationTests : IAsyncLifetime
         _broker.GetOrCreateSubscription("integration-topic", "sub-a");
         _broker.GetOrCreateSubscription("integration-topic", "sub-b");
 
-        var address = new global::Amqp.Address("amqp://guest:guest@localhost:" + TestPort);
-        var connection = await global::Amqp.Connection.Factory.CreateAsync(address);
+        var connection = await CreateConnectionAsync();
         var session = new global::Amqp.Session(connection);
 
         // Must ensure the broker knows this is a topic before sending
@@ -101,8 +113,7 @@ public class AmqpIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task Reject_MovesToDlq_ViaAmqp()
     {
-        var address = new global::Amqp.Address("amqp://guest:guest@localhost:" + TestPort);
-        var connection = await global::Amqp.Connection.Factory.CreateAsync(address);
+        var connection = await CreateConnectionAsync();
         var session = new global::Amqp.Session(connection);
 
         var sender = new global::Amqp.SenderLink(session, "dlq-sender", "dlq-test-queue");
@@ -131,8 +142,7 @@ public class AmqpIntegrationTests : IAsyncLifetime
     [Fact]
     public async Task AutoCreate_Queue_OnFirstAccess()
     {
-        var address = new global::Amqp.Address("amqp://guest:guest@localhost:" + TestPort);
-        var connection = await global::Amqp.Connection.Factory.CreateAsync(address);
+        var connection = await CreateConnectionAsync();
         var session = new global::Amqp.Session(connection);
 
         var sender = new global::Amqp.SenderLink(session, "auto-sender", "auto-created-queue");

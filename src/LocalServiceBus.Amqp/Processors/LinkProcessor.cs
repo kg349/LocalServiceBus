@@ -24,6 +24,13 @@ public sealed class LinkProcessor : ILinkProcessor
     {
         try
         {
+            // The SDK sends ulong.MaxValue as max-message-size meaning "no limit from my side".
+            // AMQPNetLite echoes the incoming Attach as the response, so the SDK receives its own
+            // ulong.MaxValue, casts it to long (-1), and rejects all messages as "too large".
+            // Setting (ulong)long.MaxValue means: > 0 (so SDK applies it), and stays positive
+            // when cast back to long, so no practical message ever exceeds the limit.
+            attachContext.Attach.MaxMessageSize = (ulong)long.MaxValue;
+
             if (attachContext.Attach.Role) // role=true means receiver (broker is source)
             {
                 var source = attachContext.Attach.Source as Source;
